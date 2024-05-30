@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use App\Rules\IpCheckRule;
+use App\Rules\SpecialCharRule;
 
 class UserController extends Controller
 {
@@ -18,11 +20,14 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
+        $request['ip'] = $request->ip();
+        
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'email_address' => 'required|email|unique:users',
-            'type' => 'required|in:student,teacher,parent,private tutor',
+            'first_name' => ['required', 'string', new SpecialCharRule],
+            'last_name' => ['required', 'string', new SpecialCharRule],
+            'email_address' => ['required', 'email', 'unique:users', new SpecialCharRule],
+            'type' => ['required', 'in:student,teacher,parent,private tutor', new SpecialCharRule],
+            'ip' => [new IpCheckRule],
         ]);
 
         if ($validator->fails()) {
@@ -32,6 +37,7 @@ class UserController extends Controller
                 "response" => $message
             ];
         }
+        
 
         $user = User::create($request->only(
             'first_name', 'last_name', 'email_address', 'type'
