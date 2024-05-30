@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Http\Requests\CreateUserRequest;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -35,6 +36,13 @@ class UserController extends Controller
         $user = User::create($request->only(
             'first_name', 'last_name', 'email_address', 'type'
         ));
+
+        // Send welcome email
+        Mail::to($user->email_address)->send(new WelcomeEmail([
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'type' => $user->type
+        ]));
 
         return [
             "status" => 1,
